@@ -2,17 +2,16 @@ require("dotenv").config();
 const cors = require("cors");
 const axios = require("axios");
 const express = require("express");
-const rp = require("request-promise");
 const app = express();
 const puppeteer = require("puppeteer");
 const { scrollPageToBottom } = require("puppeteer-autoscroll-down");
 const errorHandler = require("./middleware/errorHandler");
-const threshold = require("./constants/constants");
+const { threshold, jqueryPath } = require("./constants/constants");
 const AppError = require("./errors/AppError");
 
 const PORT = process.env.PORT;
 const sentimentAnalyserEndpoint = process.env.sentiment_host;
-console.log("This is the:", sentimentAnalyserEndpoint)
+const origin = process.env.frontend_host;
 
 app.listen(PORT, () => {
   console.log("Server started on PORT: ", PORT);
@@ -21,7 +20,7 @@ app.use(express.json());
 app.use(errorHandler);
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: origin,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })
@@ -32,7 +31,6 @@ app.get("/scrape", async (request, response, next) => {
   const shouldScrapeLinks = request.query.links;
   const analysis = request.query.analysis;
   const url = request.query.url;
-  console.log(shouldScrapeImages, shouldScrapeLinks, analysis, url);
   try {
     const result = await scrapePage(url, shouldScrapeLinks, shouldScrapeImages);
     if (analysis === "simple") {
@@ -63,10 +61,7 @@ const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: "/usr/bin/google-chrome",
-    args: [
-      '--no-sandbox',
-      '--disable-gpu',
-    ]
+    args: ["--no-sandbox", "--disable-gpu"],
   });
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(2 * 60 * 1000);
@@ -95,7 +90,6 @@ const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
       await scrollPageToBottom(page);
       jsonPage.images = await scrapeImages(page);
     }
-    console.log(jsonPage);
 
     jsonPages.push(jsonPage);
 
@@ -122,7 +116,6 @@ const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
       shouldScrapeLinks === "true" ? (jsonPage.links = currentLinks) : null;
 
       jsonPages.push(jsonPage);
-      console.log(jsonPage);
 
       await currentPage.close();
     }
@@ -132,7 +125,6 @@ const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
       )
     );
 
-    console.log(jsonPages[0]);
     if (!Object.hasOwnProperty(jsonPages[0], "links")) {
       jsonPages[0].links = [url];
     } else if (jsonPages[0].links.length === 0) {
@@ -232,7 +224,7 @@ async function getLinksFromPage(page) {
 
 const countWordsFromWebpage = async (page) => {
   await page.addScriptTag({
-    url: "https://code.jquery.com/jquery-3.2.1.min.js",
+    url: jqueryPath,
   });
   const wordCount = await page.evaluate(() => {
     const $ = window.$;
@@ -240,9 +232,7 @@ const countWordsFromWebpage = async (page) => {
     const bodyText = $("body").text();
     const splitted = bodyText.split(/(?=[A-Z])/);
     let count = 0;
-    let end = [];
     splitted.forEach((arr) => {
-      end.push(splitted);
       const splittedArray = arr.split(/\s+/);
       splittedArray.forEach((word) => {
         if (/[a-zA-Z]+|[A-Za-z]+|[a-z]+|[A-Z]+/.test(word)) {

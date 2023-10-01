@@ -9,6 +9,9 @@ Web Scraping app is a tool designed to web-scrape simple pages. It checks every 
 
 The app is dockerized. Just clone the repository build the docker images and run them :).
 Also everything can be run locally by installing the required packages and then running the scritps.
+ ```
+ docker-compose build ; docker-compose up
+ ```
 
 ## Tech Stack
 
