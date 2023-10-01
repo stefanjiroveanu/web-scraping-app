@@ -18,7 +18,8 @@
     "nodemon": "^3.0.1",
     "puppeteer": "^21.3.5",
     "puppeteer-autoscroll-down": "^1.1.2",
-    "request-promise": "^4.2.6"
+    "request-promise": "^4.2.6",
+    "cors" : "^2.8.5"
   },
   "type": "commonjs"
 }

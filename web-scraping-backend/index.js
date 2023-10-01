@@ -1,5 +1,5 @@
 require("dotenv").config();
-const cors = require('cors');
+const cors = require("cors");
 const axios = require("axios");
 const express = require("express");
 const rp = require("request-promise");
@@ -12,24 +12,27 @@ const AppError = require("./errors/AppError");
 
 const PORT = process.env.PORT;
 const sentimentAnalyserEndpoint = process.env.sentiment_host;
+console.log("This is the:", sentimentAnalyserEndpoint)
 
 app.listen(PORT, () => {
   console.log("Server started on PORT: ", PORT);
 });
 app.use(express.json());
 app.use(errorHandler);
-app.use(cors({
-  origin: 'http://localhost:3000',
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type'],
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 
 app.get("/scrape", async (request, response, next) => {
   const shouldScrapeImages = request.query.img;
   const shouldScrapeLinks = request.query.links;
   const analysis = request.query.analysis;
   const url = request.query.url;
-  console.log(shouldScrapeImages, shouldScrapeLinks, analysis, url)
+  console.log(shouldScrapeImages, shouldScrapeLinks, analysis, url);
   try {
     const result = await scrapePage(url, shouldScrapeLinks, shouldScrapeImages);
     if (analysis === "simple") {
@@ -40,7 +43,6 @@ app.get("/scrape", async (request, response, next) => {
           threshold[0]
         );
       }
-
     } else if (analysis === "ml") {
       for (let i = 0; i < result.length; i++) {
         result[i].paragraphs = await sentimentAnalysis(
@@ -50,7 +52,7 @@ app.get("/scrape", async (request, response, next) => {
         );
       }
     }
-    console.log(result)
+    console.log(result);
     response.json(result);
   } catch (error) {
     next(error);
@@ -58,7 +60,14 @@ app.get("/scrape", async (request, response, next) => {
 });
 
 const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: "/usr/bin/google-chrome",
+    args: [
+      '--no-sandbox',
+      '--disable-gpu',
+    ]
+  });
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
@@ -68,7 +77,7 @@ const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
     await page.screenshot({ path: "1.png" });
     await page.waitForSelector("a");
 
-    const jsonPages = []
+    const jsonPages = [];
 
     const jsonPage = {};
 
@@ -77,18 +86,18 @@ const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
     jsonPage.jsonPageNumber = 0;
     jsonPage.h3s = values.h3s;
     jsonPage.paragraphs = values.paragraphs;
-    jsonPage.links = []
+    jsonPage.links = [];
 
     const pages = await getLinksFromPage(page);
-    shouldScrapeLinks === "true" ? jsonPage.links = pages : null;
+    shouldScrapeLinks === "true" ? (jsonPage.links = pages) : null;
 
     if (shouldScrapeImages === "true") {
       await scrollPageToBottom(page);
       jsonPage.images = await scrapeImages(page);
     }
-    console.log(jsonPage)
+    console.log(jsonPage);
 
-    jsonPages.push(jsonPage)
+    jsonPages.push(jsonPage);
 
     for (let i = 0; i < pages.length; i++) {
       const jsonPage = {};
@@ -110,22 +119,25 @@ const scrapePage = async (url, shouldScrapeLinks, shouldScrapeImages) => {
       jsonPage.paragraphs = pageValue.paragraphs;
 
       const currentLinks = await getLinksFromPage(currentPage);
-      shouldScrapeLinks === "true" ? jsonPage.links = currentLinks : null;
+      shouldScrapeLinks === "true" ? (jsonPage.links = currentLinks) : null;
 
       jsonPages.push(jsonPage);
-      console.log(jsonPage)
+      console.log(jsonPage);
 
       await currentPage.close();
     }
-    jsonPages.forEach((jsonPage) => jsonPage.paragraphs.filter((item, index) => jsonPage.paragraphs.indexOf(item) === index))
+    jsonPages.forEach((jsonPage) =>
+      jsonPage.paragraphs.filter(
+        (item, index) => jsonPage.paragraphs.indexOf(item) === index
+      )
+    );
 
-    console.log(jsonPages[0])
-    if (!Object.hasOwnProperty(jsonPages[0], 'links')) {
-      jsonPages[0].links = [url]; 
+    console.log(jsonPages[0]);
+    if (!Object.hasOwnProperty(jsonPages[0], "links")) {
+      jsonPages[0].links = [url];
     } else if (jsonPages[0].links.length === 0) {
       jsonPages[0].links.push(url);
     }
-
 
     return jsonPages;
   } catch (error) {
@@ -230,10 +242,10 @@ const countWordsFromWebpage = async (page) => {
     let count = 0;
     let end = [];
     splitted.forEach((arr) => {
-      end.push(splitted)
+      end.push(splitted);
       const splittedArray = arr.split(/\s+/);
       splittedArray.forEach((word) => {
-        if(/[a-zA-Z]+|[A-Za-z]+|[a-z]+|[A-Z]+/.test(word)) {
+        if (/[a-zA-Z]+|[A-Za-z]+|[a-z]+|[A-Z]+/.test(word)) {
           count++;
         }
       });

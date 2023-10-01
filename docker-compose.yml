@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  backend:
+    build: ./web-scraping-backend
+    ports:
+      - 18080:18080
+    environment:
+      - ./web-scraping-backend/.env
+    networks:
+            app_net:
+                ipv4_address: 172.16.238.2
+  frontend:
+    build: ./web-scraping-app-react
+    ports:
+      - 3000:3000
+    networks:
+            app_net:
+                ipv4_address: 172.16.238.3
+  sentiment:
+    build: ./web-scraping-backend/NPL-sentiment-analyser
+    ports:
+      - 5000:5000
+    networks:
+            app_net:
+                ipv4_address: 172.16.238.4
+
+networks:
+    app_net:
+        ipam:
+            driver: default
+            config:
+            - subnet: "172.16.238.0/24"
+  

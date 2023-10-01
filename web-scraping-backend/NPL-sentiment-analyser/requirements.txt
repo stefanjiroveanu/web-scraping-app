@@ -1,0 +1,5 @@
+Flask==2.0.2
+Werkzeug==2.0.2
+Pandas==2.0.1
+Numpy==1.26.0
+Tensorflow==2.14.0
