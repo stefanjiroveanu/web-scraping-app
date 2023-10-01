@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Slides from "./components/slide";
 import LoadingSpinner from "./components/spinner";
+import { ToastContainer } from "react-toastify";
 
 export default function App() {
   const [data, setData] = useState(null);
@@ -35,7 +36,7 @@ export default function App() {
       .catch((error) => {
         setSpinner(false);
         console.error("Error fetching data:", error);
-        alert(error.message)
+        alert(error.message);
       });
 
     return requestData;
@@ -53,7 +54,6 @@ export default function App() {
       if (event.key === "Control") {
         console.log(link, JSON.stringify(url), feelings, image);
       }
-
     };
 
     document.addEventListener("keydown", keyDownHandler);
@@ -89,25 +89,25 @@ export default function App() {
               type="checkbox"
               className="bg-secondary float-left w-10 h-10 border-solid border-2 border-white rounded-full text-white mr-40"
               onClick={() => {
-                console.log(!link)
+                console.log(!link);
                 setLink(!link);
               }}
             ></input>
           </div>
           <div className="float-left">
-          <div className=" w-10 h-10 text-white">Image</div>
-          <input
-            type="checkbox"
-            className="bg-secondary float-left w-10 h-10 border-solid border-2 border-white rounded-full text-white mr-20"
-            onClick={() => {
-              console.log(!image)
-              setImage(!image);
-            }}
-          ></input>
+            <div className=" w-10 h-10 text-white">Image</div>
+            <input
+              type="checkbox"
+              className="bg-secondary float-left w-10 h-10 border-solid border-2 border-white rounded-full text-white mr-20"
+              onClick={() => {
+                console.log(!image);
+                setImage(!image);
+              }}
+            ></input>
           </div>
           <select
             onChange={(event) => {
-              console.log(event.target.value)
+              console.log(event.target.value);
               setFeelings(event.target.value);
             }}
             className="mt-8 w-96 h-12 flex float-left text-center bg-secondary focus:outline-none text-white border-solid border-2 border-white rounded-full"
@@ -116,11 +116,33 @@ export default function App() {
             <option>Simple Algorithm</option>
             <option>Machine Learning Algorithm</option>
           </select>
-          {spinner && <LoadingSpinner/>}
+          {spinner && <LoadingSpinner />}
         </form>
         <div className="h-80 pl-10 my-auto inline-block text-center flex">
           <Slides data={data}></Slides>
+          <ToastContainer
+            position="top-right"
+            autoClose={1000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            draggable
+            theme="light"
+          />
         </div>
+        {data && (
+          <a
+            className="h-10 w-40 mx-[50rem] mb-5 bg-white hover:bg-gray-200 text-center text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+            type="button"
+            href={`data:text/json;charset=utf-8,${encodeURIComponent(
+              JSON.stringify(data, null, 2)
+            )}`}
+            download="scraped.json"
+          >
+            {`Download`}
+          </a>
+        )}
       </div>
     </main>
   );
